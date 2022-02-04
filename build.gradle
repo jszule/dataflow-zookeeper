@@ -1,0 +1,33 @@
+plugins {
+    id 'java'
+}
+
+group 'com.john.lif'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://packages.confluent.io/maven/'
+    }
+}
+
+dependencies {
+    implementation group: 'org.apache.beam', name: 'beam-sdks-java-bom', version: '2.35.0'
+    implementation group: 'org.apache.beam', name: 'beam-runners-core-java', version: '2.35.0'
+    implementation group: 'org.apache.beam', name: 'beam-model-pipeline', version: '2.35.0'
+    implementation group: 'org.apache.beam', name: 'beam-sdks-java-core', version: '2.35.0'
+    implementation group: 'org.apache.beam', name: 'beam-runners-google-cloud-dataflow-java', version: '2.35.0'
+    implementation group: 'org.apache.beam', name: 'beam-runners-direct-java', version: '2.35.0'
+
+    implementation group: 'org.apache.curator', name: 'curator-framework', version: '5.2.0'
+    implementation 'org.apache.curator:curator-recipes:5.2.0'
+    implementation group: 'org.apache.zookeeper', name: 'zookeeper', version: '3.7.0'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+test {
+    useJUnitPlatform()
+}
