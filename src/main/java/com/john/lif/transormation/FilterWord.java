@@ -1,5 +1,6 @@
 package com.john.lif.transormation;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.transforms.ParDo;
@@ -12,6 +13,7 @@ import org.apache.curator.retry.RetryNTimes;
 import java.util.concurrent.ConcurrentHashMap;
 
 
+@Slf4j
 public class FilterWord extends PTransform<PCollection<String>, PCollection<String>> {
 
     @Override
@@ -22,20 +24,22 @@ public class FilterWord extends PTransform<PCollection<String>, PCollection<Stri
     private static class FilterDoFn extends DoFn<String, String> {
 
         ConcurrentHashMap<String, String> myMap = new ConcurrentHashMap<>();
+        CuratorFramework client;
+        PersistentWatcher persistentWatcher;
 
         @Setup
         public void setup() throws Exception {
-            CuratorFramework client = CuratorFrameworkFactory.newClient("127.0.0.1:2181", new RetryNTimes(5, 5));
+            client = CuratorFrameworkFactory.newClient("127.0.0.1:2181", new RetryNTimes(5, 5));
             client.start();
-            PersistentWatcher persistentWatcher = new PersistentWatcher(client, "/aa/bb", false);
+            persistentWatcher = new PersistentWatcher(client, "/test/node", false);
             persistentWatcher.start();
 
-            myMap.put("a",  new String(client.getData().forPath("/aa/bb")));
+            myMap.put("a",  new String(client.getData().forPath("/test/node")));
 
             persistentWatcher.getListenable().addListener(event -> {
                         try {
                             var result = new String(client.getData().forPath(event.getPath()));
-                            System.out.println("In listener:" + result + " " + Thread.currentThread().getName());
+                            log.info("In listener:" + result + " " + Thread.currentThread().getName());
                             myMap.put("a", result);
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -46,13 +50,14 @@ public class FilterWord extends PTransform<PCollection<String>, PCollection<Stri
 
         @Teardown
         public void tearDown() {
-            //close client connections
+            log.info("Closing ZK connections");
+            persistentWatcher.close();
+            client.close();
         }
 
         @ProcessElement
         public void processElement(@Element String inputString, OutputReceiver<String> outputReceiver) {
-            System.out.println("Config: " + myMap.get("a"));
-            outputReceiver.output(inputString);
+            if(!inputString.matches(myMap.get("a"))) outputReceiver.output(inputString);
         }
     }
 }
