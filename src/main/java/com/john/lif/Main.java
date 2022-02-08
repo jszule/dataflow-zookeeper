@@ -4,7 +4,6 @@ import com.john.lif.transormation.FilterWord;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.runners.direct.DirectRunner;
 import org.apache.beam.sdk.Pipeline;
-import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
@@ -23,9 +22,7 @@ public class Main {
         Pipeline p = Pipeline.create(options);
 
         p.apply(PubsubIO.readStrings().fromTopic("projects/lif-john-test/topics/test"))
-                .setCoder(StringUtf8Coder.of())
                 .apply(new FilterWord())
-                .setCoder(StringUtf8Coder.of())
                 .apply(ParDo.of(new DoFn<String, String>() {
                     @ProcessElement
                     public void processElement(@Element String string) {

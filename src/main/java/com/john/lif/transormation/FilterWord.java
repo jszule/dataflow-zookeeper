@@ -34,7 +34,9 @@ public class FilterWord extends PTransform<PCollection<String>, PCollection<Stri
             persistentWatcher = new PersistentWatcher(client, "/test/node", false);
             persistentWatcher.start();
 
-            myMap.put("a",  new String(client.getData().forPath("/test/node")));
+            String currentConfig =new String(client.getData().forPath("/test/node"));
+            myMap.put("a", currentConfig);
+            log.info("Initializing thread with:" + currentConfig + " " + Thread.currentThread().getName());
 
             persistentWatcher.getListenable().addListener(event -> {
                         try {
@@ -57,7 +59,7 @@ public class FilterWord extends PTransform<PCollection<String>, PCollection<Stri
 
         @ProcessElement
         public void processElement(@Element String inputString, OutputReceiver<String> outputReceiver) {
-            if(!inputString.matches(myMap.get("a"))) outputReceiver.output(inputString);
+            if(!inputString.contains(myMap.get("a"))) outputReceiver.output(inputString);
         }
     }
 }
